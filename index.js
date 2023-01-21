@@ -229,12 +229,98 @@ async function run() {
                     tPrice: item.quantity * item.price,
                     orderPersonEmail: data.orderPersonEmail,
                     orderDate: data.orderDate,
+                    authorEmail: item.authorEmail
                 }
             }
             )
 
             const insertResult = await ordersCollection.insertMany(productList);
             res.send(insertResult);
+        })
+        app.get('/myorders', async (req, res) => {
+            const email = req.query.email;
+            const result = await ordersCollection.find({ orderPersonEmail: email }).toArray();
+            let idList = []
+            const productIdList = result.map(item => {
+                if (idList.includes(item.productId) === false) {
+                    idList.push(item.productId)
+                }
+            })
+            const productList = await productsCollection.find({ productId: { $in: [...idList] } }).toArray()
+            const finalResult = result.map(item => {
+                let data = {};
+                productList.map(product => {
+                    if (product.productId == item.productId) {
+                        data = {
+                            productInfo: product,
+                            orderInfo: item
+                        }
+                    }
+                })
+
+                return data
+            })
+            // console.log(finalResult);
+            res.send(finalResult)
+        })
+
+        app.get('/allorders', async (req, res) => {
+            const email = req.query.email;
+            let result;
+            if (email) {
+                result = await ordersCollection.find({ authorEmail: email }).toArray();
+            }
+            else {
+                result = await ordersCollection.find({}).toArray();
+            }
+            let idList = []
+            const productIdList = result.map(item => {
+                if (idList.includes(item.productId) === false) {
+                    idList.push(item.productId)
+                }
+            })
+            const productList = await productsCollection.find({ productId: { $in: [...idList] } }).toArray()
+            const finalResult = result.map(item => {
+                let data = {};
+                productList.map(product => {
+                    if (product.productId == item.productId) {
+                        data = {
+                            productInfo: product,
+                            orderInfo: item
+                        }
+                    }
+                })
+
+                return data
+            })
+            // console.log(finalResult);
+            res.send(finalResult)
+        })
+        app.put('/manageadmin', async (req, res) => {
+            const data = req.body;
+            const filter = {
+                _id: ObjectId(data.id)
+            }
+            const options = { upsert: true };
+
+            if (data.action == 'add') {
+                const updatedDoc = {
+                    $set: {
+                        role: 'admin',
+                    }
+                }
+                const result = await userCollection.updateOne(filter, updatedDoc, options)
+                res.send(result);
+            }
+            else if (data.action = 'remove') {
+                const updatedDoc = {
+                    $set: {
+                        role: 'normalUser',
+                    }
+                }
+                const result = await userCollection.updateOne(filter, updatedDoc, options)
+                res.send(result);
+            }
         })
 
     }
