@@ -27,6 +27,7 @@ async function run() {
         const bookedMarkCollection = client.db('finalYearProject').collection('bookedmarkitems');
         const productsCollection = client.db('finalYearProject').collection('products');
         const ordersCollection = client.db('finalYearProject').collection('orders');
+        const employeesCollection = client.db('finalYearProject').collection('employees');
         app.get('/district/:category', async (req, res) => {
             const cate = req.params.category;
             // console.log("cat",cate);
@@ -321,6 +322,12 @@ async function run() {
                 const result = await userCollection.updateOne(filter, updatedDoc, options)
                 res.send(result);
             }
+        })
+
+        app.post('/addemployee', async (req, res) => {
+            const data = req.body;           
+            const insertResult = await employeesCollection.insertOne(data);
+            res.send(insertResult);
         })
 
     }
