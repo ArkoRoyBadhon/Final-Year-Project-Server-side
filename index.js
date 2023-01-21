@@ -325,9 +325,21 @@ async function run() {
         })
 
         app.post('/addemployee', async (req, res) => {
-            const data = req.body;           
+            const data = req.body;
             const insertResult = await employeesCollection.insertOne(data);
             res.send(insertResult);
+        })
+
+        app.get('/employees', async (req, res) => {
+            const result = await employeesCollection.find({}).toArray()
+            res.send(result)
+        })
+
+        app.delete('/deleteemployee/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id)
+            const result = await employeesCollection.deleteOne({ _id: ObjectId(id) });
+            res.send(result)
         })
 
     }
