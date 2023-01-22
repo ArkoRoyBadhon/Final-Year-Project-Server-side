@@ -124,8 +124,22 @@ async function run() {
         })
         app.get('/allitems', async (req, res) => {
             const email = req.query.email
-            const filter = { authorEmail: email }
+            const category = req.query.category
+            const type = req.query.type;
+            let filter = {};
+            if (type == 'Own') {
+                filter = { authorEmail: email, category: category }
+            }
+            else if (type == 'Others') {
+                filter = {
+                    authorEmail: { $nin: [email] }, category: category
+                }
+            }
+            else {
+                filter = { category: category }
+            }
             const result = await productsCollection.find(filter).toArray();
+            console.log(email, category);
             res.send(result);
         })
 
@@ -340,6 +354,36 @@ async function run() {
             console.log(id)
             const result = await employeesCollection.deleteOne({ _id: ObjectId(id) });
             res.send(result)
+        })
+
+        app.get('/getemployee/:id', async (req, res) => {
+            const id = req.params.id;
+            // console.log(id);
+            const result = await employeesCollection.findOne({ _id: ObjectId(id) });
+            res.send(result)
+        })
+
+        app.put('/editemployee/:id', async (req, res) => {
+            const id = req.params.id;
+            const data = req.body;
+            console.log(id, data);
+
+            const filter = {
+                _id: ObjectId(id)
+            }
+            const options = { upsert: true };
+            const updatedDoc = {
+                $set: {
+                    name: data.name,
+                    photo: data.photo,
+                    location: data.location,
+                    position: data.position,
+                    email: data.email,
+                    phone: data.phone,
+                }
+            }
+            const result = await employeesCollection.updateOne(filter, updatedDoc, options)
+            res.send(result);
         })
 
     }
