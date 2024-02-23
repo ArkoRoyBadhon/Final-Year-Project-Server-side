@@ -191,12 +191,21 @@ async function run() {
         app.get('/editproduct/:id', async (req, res) => {
             const id = req.params.id;
             const email = req.query.email;
-            const result = await productsCollection.findOne({ productId: id, authorEmail: email });
-            if (result) {
-                res.send(result);
+            const userType = await userCollection.findOne({ email: email });
+            // console.log(userType);
+            let result;
+            if (userType.role === 'superUser' || userType.role === 'admin') {
+                result = await productsCollection.findOne({ productId: id}); 
             }
             else {
-                res.send({ code: 'No' })
+                result = await productsCollection.findOne({ productId: id, authorEmail: email });
+            }
+            // console.log(result)
+            if (result) {
+                res.send({ result: result, code: true });
+            }
+            else {
+                res.send({ code: false })
             }
         })
         app.put('/editproduct', async (req, res) => {
@@ -366,7 +375,7 @@ async function run() {
         app.put('/editemployee/:id', async (req, res) => {
             const id = req.params.id;
             const data = req.body;
-            console.log(id, data);
+            // console.log(id, data);
 
             const filter = {
                 _id: ObjectId(id)
@@ -385,6 +394,14 @@ async function run() {
             const result = await employeesCollection.updateOne(filter, updatedDoc, options)
             res.send(result);
         })
+        app.get('/items', async (req, res) => {
+            const lengthData = req.query.len;
+            const medProduct = await productsCollection.find({ category: 'Medicine' }).limit(2).toArray()
+            const macProduct = await productsCollection.find({ category: 'Machinaries' }).limit(1).toArray()
+            const finalResult = [...medProduct, ...macProduct]
+            // console.log(macProduct);
+            res.send(finalResult)
+        })
 
     }
     catch {
@@ -400,7 +417,7 @@ run().catch(console.log())
 
 
 app.get('/', (req, res) => {
-    res.send("Arko Roy")
+    res.send("CropDoctor server running...")
 })
 
 
